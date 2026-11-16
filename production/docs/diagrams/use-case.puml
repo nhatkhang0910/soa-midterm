@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+actor "Người nộp học phí" as User
+actor "Mailpit\nEmail giả lập" as Mail
+rectangle "Phân hệ đóng học phí iBanking" {
+  usecase "Đăng nhập" as Login
+  usecase "Xem hồ sơ và số dư" as Profile
+  usecase "Tra cứu sinh viên / học phí" as Lookup
+  usecase "Thanh toán toàn bộ học phí\ncho mình hoặc sinh viên khác" as Pay
+  usecase "Chấp nhận điều khoản" as Terms
+  usecase "Xác nhận OTP" as OTP
+  usecase "Gửi email OTP" as SendOTP
+  usecase "Gửi email thành công" as SuccessMail
+  usecase "Xem lịch sử / trạng thái" as History
+}
+User --> Login
+User --> Profile
+User --> Lookup
+User --> Pay
+User --> History
+Pay ..> Lookup : <<include>>
+Pay ..> Terms : <<include>>
+Pay ..> OTP : <<include>>
+OTP ..> SendOTP : <<include>>
+SuccessMail ..> Pay : <<extend>>\n[thanh toán thành công]
+Mail --> SendOTP
+Mail --> SuccessMail
+note bottom of Pay
+Người nộp và sinh viên có thể khác nhau.
+Đăng nhập là tiền điều kiện của các ca còn lại.
+end note
+@enduml

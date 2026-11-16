@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100" role="img" aria-labelledby="title description">
+  <title id="title">Use Case — Phân hệ đóng học phí iBanking</title>
+  <desc id="description">Sơ đồ UML theo use-case.puml: người nộp học phí sử dụng chín ca sử dụng trong hệ thống; Mailpit nhận email OTP và email thành công. Thanh toán bao gồm tra cứu, điều khoản, xác nhận OTP; gửi email thành công mở rộng thanh toán khi thành công.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 1 1 L 11 6 L 1 11" fill="none" stroke="#334155" stroke-width="2" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: Arial, 'DejaVu Sans', sans-serif; fill: #172033; text-anchor: middle; }
+      .boundary { fill: #fff; stroke: #334155; stroke-width: 2; }
+      .case ellipse { fill: #f8fafc; stroke: #334155; stroke-width: 2; }
+      .case text { font-size: 20px; }
+      .actor { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; }
+      .actor-label { font-size: 21px; font-weight: 600; }
+      .relation { fill: none; stroke: #334155; stroke-width: 1.8; marker-end: url(#arrow); }
+      .dependency { stroke-dasharray: 8 6; }
+      .relation-label { font-size: 18px; paint-order: stroke; stroke: #fff; stroke-width: 8px; stroke-linejoin: round; }
+      .note { fill: #fffbea; stroke: #78664a; stroke-width: 1.5; }
+    </style>
+  </defs>
+  <rect width="1600" height="1100" fill="#fff"/>
+  <rect class="boundary" x="240" y="45" width="1100" height="1000" rx="3"/>
+  <text x="790" y="88" font-size="27" font-weight="700">Phân hệ đóng học phí iBanking</text>
+
+  <g id="User" data-kind="actor">
+    <g class="actor">
+      <circle cx="95" cy="495" r="18"/>
+      <path d="M95 513 V568 M60 535 H130 M95 568 L65 605 M95 568 L125 605"/>
+    </g>
+    <text class="actor-label" x="95" y="643">Người nộp</text>
+    <text class="actor-label" x="95" y="670">học phí</text>
+  </g>
+  <g id="Mail" data-kind="actor">
+    <g class="actor">
+      <circle cx="1460" cy="720" r="18"/>
+      <path d="M1460 738 V793 M1425 760 H1495 M1460 793 L1430 830 M1460 793 L1490 830"/>
+    </g>
+    <text class="actor-label" x="1460" y="870">Mailpit</text>
+    <text x="1460" y="898" font-size="20">Email giả lập</text>
+  </g>
+
+  <g class="case" id="Login" data-kind="usecase">
+    <ellipse cx="470" cy="150" rx="155" ry="40"/>
+    <text x="470" y="157">Đăng nhập</text>
+  </g>
+  <g class="case" id="Profile" data-kind="usecase">
+    <ellipse cx="470" cy="280" rx="155" ry="40"/>
+    <text x="470" y="287">Xem hồ sơ và số dư</text>
+  </g>
+  <g class="case" id="Lookup" data-kind="usecase">
+    <ellipse cx="470" cy="410" rx="175" ry="40"/>
+    <text x="470" y="417">Tra cứu sinh viên / học phí</text>
+  </g>
+  <g class="case" id="Pay" data-kind="usecase">
+    <ellipse cx="470" cy="590" rx="200" ry="60"/>
+    <text x="470" y="583">Thanh toán toàn bộ học phí</text>
+    <text x="470" y="611">cho mình hoặc sinh viên khác</text>
+  </g>
+  <g class="case" id="Terms" data-kind="usecase">
+    <ellipse cx="1050" cy="330" rx="165" ry="45"/>
+    <text x="1050" y="337">Chấp nhận điều khoản</text>
+  </g>
+  <g class="case" id="OTP" data-kind="usecase">
+    <ellipse cx="1050" cy="500" rx="150" ry="45"/>
+    <text x="1050" y="507">Xác nhận OTP</text>
+  </g>
+  <g class="case" id="SendOTP" data-kind="usecase">
+    <ellipse cx="1050" cy="670" rx="150" ry="45"/>
+    <text x="1050" y="677">Gửi email OTP</text>
+  </g>
+  <g class="case" id="SuccessMail" data-kind="usecase">
+    <ellipse cx="1050" cy="840" rx="170" ry="45"/>
+    <text x="1050" y="847">Gửi email thành công</text>
+  </g>
+  <g class="case" id="History" data-kind="usecase">
+    <ellipse cx="470" cy="840" rx="170" ry="40"/>
+    <text x="470" y="847">Xem lịch sử / trạng thái</text>
+  </g>
+
+  <g aria-label="Quan hệ giữa actor và ca sử dụng">
+    <path class="relation" data-from="User" data-to="Login" d="M130 535 L315 150"/>
+    <path class="relation" data-from="User" data-to="Profile" d="M130 535 L315 280"/>
+    <path class="relation" data-from="User" data-to="Lookup" d="M130 535 L295 410"/>
+    <path class="relation" data-from="User" data-to="Pay" d="M130 535 L270 590"/>
+    <path class="relation" data-from="User" data-to="History" d="M130 535 L300 840"/>
+    <path class="relation" data-from="Mail" data-to="SendOTP" d="M1425 760 L1200 670"/>
+    <path class="relation" data-from="Mail" data-to="SuccessMail" d="M1425 760 L1220 840"/>
+  </g>
+  <g aria-label="Quan hệ include và extend">
+    <path class="relation dependency" data-from="Pay" data-to="Lookup" data-stereotype="include" d="M470 530 V450"/>
+    <text class="relation-label" x="535" y="497">«include»</text>
+    <path class="relation dependency" data-from="Pay" data-to="Terms" data-stereotype="include" d="M620 550 Q760 490 760 330 H885"/>
+    <text class="relation-label" x="760" y="417">«include»</text>
+    <path class="relation dependency" data-from="Pay" data-to="OTP" data-stereotype="include" d="M670 590 H820 V500 H900"/>
+    <text class="relation-label" x="825" y="555">«include»</text>
+    <path class="relation dependency" data-from="OTP" data-to="SendOTP" data-stereotype="include" d="M1050 545 V625"/>
+    <text class="relation-label" x="1115" y="592">«include»</text>
+    <path class="relation dependency" data-from="SuccessMail" data-to="Pay" data-stereotype="extend" d="M880 840 H735 V720 H470 V650"/>
+    <text class="relation-label" x="600" y="750">«extend»</text>
+    <text class="relation-label" x="600" y="778">[thanh toán thành công]</text>
+  </g>
+
+  <g aria-label="Ghi chú điều kiện nghiệp vụ">
+    <path class="note" d="M280 930 H765 L785 950 V1015 H280 Z M765 930 V950 H785"/>
+    <text x="532" y="962" font-size="18">Người nộp và sinh viên có thể khác nhau.</text>
+    <text x="532" y="991" font-size="18">Đăng nhập là tiền điều kiện của các ca còn lại.</text>
+  </g>
+</svg>

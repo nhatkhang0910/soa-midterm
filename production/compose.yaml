@@ -1,0 +1,121 @@
+name: soa-midterm
+x-backend: &backend
+  restart: unless-stopped
+  build:
+    context: .
+    dockerfile: infra/backend.Dockerfile
+  depends_on:
+    db: {condition: service_healthy}
+  volumes:
+    - ./.secrets/public.pem:/run/secrets/public.pem:ro
+  healthcheck:
+    test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+    interval: 5s
+    timeout: 5s
+    retries: 20
+x-env: &env
+  JWT_PUBLIC_KEY_FILE: /run/secrets/public.pem
+  PAYMENT_SERVICE_KEY: ${PAYMENT_SERVICE_KEY}
+  AUTH_URL: http://auth:8000
+  WALLET_URL: http://wallet:8000
+  TUITION_URL: http://tuition:8000
+  NOTIFICATION_URL: http://notification:8000
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      WALLET_DB_PASSWORD: ${WALLET_DB_PASSWORD}
+      TUITION_DB_PASSWORD: ${TUITION_DB_PASSWORD}
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+    volumes:
+      - database:/var/lib/postgresql
+      - ./infra/db/init.sh:/docker-entrypoint-initdb.d/01-services.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  mailpit:
+    image: axllent/mailpit@sha256:aef2aacc11f075ec0fb6874275ee4a421e688e11a96ebb296134d1735c7761ce
+    environment: {MP_WEBROOT: /mail/}
+    restart: unless-stopped
+  auth:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: auth}}
+    environment:
+      <<: *env
+      SERVICE_NAME: auth
+      DATABASE_URL: postgresql+psycopg://auth:${AUTH_DB_PASSWORD}@db/auth
+      JWT_PRIVATE_KEY_FILE: /run/secrets/private.pem
+      DEMO_PASSWORD: ${DEMO_PASSWORD}
+      DEMO_EMAIL_AN: ${DEMO_EMAIL_AN}
+      DEMO_EMAIL_BINH: ${DEMO_EMAIL_BINH}
+    volumes:
+      - ./.secrets/public.pem:/run/secrets/public.pem:ro
+      - ./.secrets/private.pem:/run/secrets/private.pem:ro
+  wallet:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: wallet}}
+    environment:
+      <<: *env
+      SERVICE_NAME: wallet
+      DATABASE_URL: postgresql+psycopg://wallet:${WALLET_DB_PASSWORD}@db/wallet
+  tuition:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: tuition}}
+    environment:
+      <<: *env
+      SERVICE_NAME: tuition
+      DATABASE_URL: postgresql+psycopg://tuition:${TUITION_DB_PASSWORD}@db/tuition
+  payment:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: payment}}
+    environment: &payment-env
+      <<: *env
+      SERVICE_NAME: payment
+      DATABASE_URL: postgresql+psycopg://payment:${PAYMENT_DB_PASSWORD}@db/payment
+      OTP_HMAC_KEY: ${OTP_HMAC_KEY}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY}
+  payment-worker:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: payment}}
+    environment: *payment-env
+    depends_on: {payment: {condition: service_healthy}}
+    command: [python, -m, payment.worker]
+    healthcheck: {disable: true}
+  notification:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: notification}}
+    environment: &notification-env
+      <<: *env
+      SERVICE_NAME: notification
+      DATABASE_URL: postgresql+psycopg://notification:${NOTIFICATION_DB_PASSWORD}@db/notification
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_STARTTLS: ${SMTP_STARTTLS}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+  notification-worker:
+    <<: *backend
+    build: {context: ., dockerfile: infra/backend.Dockerfile, args: {SERVICE: notification}}
+    environment: *notification-env
+    depends_on: {notification: {condition: service_healthy}}
+    command: [python, -m, notification.worker]
+    healthcheck: {disable: true}
+  web:
+    build: {context: ., dockerfile: infra/web.Dockerfile}
+    ports: ["127.0.0.1:${WEB_PORT:-8080}:80"]
+    depends_on:
+      auth: {condition: service_healthy}
+      wallet: {condition: service_healthy}
+      tuition: {condition: service_healthy}
+      payment: {condition: service_healthy}
+      notification: {condition: service_healthy}
+volumes:
+  database:
